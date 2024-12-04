@@ -2,6 +2,7 @@ import os
 import time
 import shutil
 import pandas as pd
+import urllib.request
 
 from datetime import datetime
 from selenium import webdriver
@@ -53,12 +54,21 @@ def espera_descarga_carpeta(carpeta_descargas):
         time.sleep(1)
 
 def extaer_actividades_contribuyentes():
+    ruta_archivo = '/home/ubuntu/CL-SII_Juridicos/Descargas/'
     driver = crear_driver()
     actividades_contribuyentes = driver.find_element_by_xpath('//*[@id="my-wrapper"]/div[2]/div[1]/div/div/div[2]/ul[1]/li[1]/a')
-    actividades_contribuyentes.click()
+    href = actividades_contribuyentes.get_attribute("href")
+    nombre_archivo = href.split('/')[-1]
+            
+    ruta_completa = os.path.join(ruta_archivo, nombre_archivo)
+
+    with urllib.request.urlopen(href) as response:
+        if response.status == 200:
+            # Guardar el contenido del archivo en la ruta especificada
+            with open(ruta_completa, 'wb') as f:
+                f.write(response.read()) 
+            
     time.sleep(1)
-    ruta_archivo = '/home/ubuntu/CL-SII_Juridicos/Descargas/'
-    espera_descarga_carpeta(ruta_archivo)
     archivos_zip = [archivo for archivo in os.listdir(ruta_archivo) if archivo.endswith('.zip')]
     archivo_zip = archivos_zip[0]
     shutil.unpack_archive(os.path.join(ruta_archivo, archivo_zip), ruta_archivo)
